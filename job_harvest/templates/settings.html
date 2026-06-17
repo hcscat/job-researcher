@@ -1,0 +1,339 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero compact">
+  <div>
+    <p class="eyebrow">{{ tr('settings.eyebrow') }}</p>
+    <h1>{{ tr('settings.hero_title') }}</h1>
+    <p class="hero-copy">{{ tr('settings.hero_copy') }}</p>
+  </div>
+</section>
+
+<form id="settings-form" class="settings-layout" data-settings='{{ settings_json | safe }}'>
+  <section class="panel">
+    <div class="panel-header"><h2>{{ tr('settings.nl_section') }}</h2></div>
+    <div class="field-grid slim">
+      <label>{{ tr('settings.describe_request') }}
+        <textarea id="interpret_request" rows="5" placeholder="{{ tr('settings.request_placeholder') }}"></textarea>
+      </label>
+      <div class="toolbar">
+        <button type="button" id="interpret-request-button" class="button ghost">{{ tr('settings.interpret_request') }}</button>
+        <span id="interpret-status" class="muted"></span>
+      </div>
+      <p id="interpret-notes" class="muted"></p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header"><h2>{{ tr('settings.sites') }}</h2></div>
+    <div class="checkbox-grid">
+      {% for site in available_sites %}
+      <label class="checkbox-card">
+        <input type="checkbox" name="site_keys" value="{{ site.key }}">
+        <span>{{ site_label(site.key, site.name) }}</span>
+        {% if site.experimental %}<small>{{ tr('common.best_effort') }}</small>{% endif %}
+      </label>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="panel two-column">
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.collection_strategy') }}</h2></div>
+      <div class="field-grid slim">
+        <label>{{ tr('settings.mode') }}
+          <select id="crawl_strategy">
+            <option value="broad_it_scan">{{ tr('settings.mode_broad') }}</option>
+            <option value="query_search">{{ tr('settings.mode_query') }}</option>
+          </select>
+        </label>
+        <label>{{ tr('settings.broad_terms') }}
+          <textarea id="crawl_terms" rows="8" placeholder="frontend&#10;backend&#10;devops"></textarea>
+        </label>
+        <label>{{ tr('settings.explicit_queries') }}
+          <textarea id="queries" rows="4" placeholder="{{ tr('settings.explicit_queries_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.listing_page_limit') }}
+          <input id="listing_page_limit" type="number" min="0" placeholder="{{ tr('settings.listing_page_limit_placeholder') }}">
+        </label>
+        <label>{{ tr('settings.detail_refetch') }}
+          <input id="detail_refetch_hours" type="number" min="1">
+        </label>
+        <label class="toggle"><input id="fetch_details" type="checkbox">{{ tr('settings.fetch_details') }}</label>
+        <label class="toggle"><input id="store_html" type="checkbox">{{ tr('settings.store_html') }}</label>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.ai_enrichment') }}</h2></div>
+      <div class="field-grid slim">
+        <label class="toggle"><input id="ai_enrichment_enabled" type="checkbox">{{ tr('settings.enable_ai') }}</label>
+        <label>{{ tr('settings.provider') }}
+          <select id="ai_provider">
+            <option value="heuristic">heuristic</option>
+            <option value="openai">openai</option>
+            <option value="external_command">external_command</option>
+          </select>
+        </label>
+        <label>{{ tr('settings.model') }}
+          <input id="ai_model" type="text" placeholder="{{ tr('settings.model_placeholder') }}">
+        </label>
+        <label>{{ tr('settings.request_timeout') }}
+          <input id="request_timeout_seconds" type="number" min="1">
+        </label>
+        <label>{{ tr('settings.concurrency') }}
+          <input id="concurrency" type="number" min="1">
+        </label>
+        <label>{{ tr('settings.pause') }}
+          <input id="pause_between_searches_seconds" type="number" step="0.1" min="0">
+        </label>
+        <label class="toggle"><input id="browser_enabled" type="checkbox">{{ tr('settings.browser_enabled') }}</label>
+        <label class="toggle"><input id="browser_headless" type="checkbox">{{ tr('settings.browser_headless') }}</label>
+        <label>{{ tr('settings.browser_timeout') }}
+          <input id="browser_timeout_seconds" type="number" min="10">
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel two-column">
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.schedule') }}</h2></div>
+      <div class="field-grid slim">
+        <label class="toggle"><input id="schedule_enabled" type="checkbox">{{ tr('settings.schedule_enabled') }}</label>
+        <label>{{ tr('settings.schedule_mode') }}
+          <select id="schedule_mode">
+            <option value="fixed_times">{{ tr('settings.schedule_fixed_times') }}</option>
+            <option value="interval_hours">{{ tr('settings.schedule_interval_hours_mode') }}</option>
+          </select>
+        </label>
+        <label>{{ tr('settings.schedule_times') }}
+          <textarea id="schedule_times" rows="3" placeholder="09:00&#10;18:00"></textarea>
+        </label>
+        <label>{{ tr('settings.schedule_interval') }}
+          <input id="schedule_interval_hours" type="number" min="1">
+        </label>
+        <label>{{ tr('settings.schedule_timezone') }}
+          <input id="schedule_timezone" type="text" placeholder="Asia/Seoul">
+        </label>
+        <label class="toggle"><input id="schedule_run_on_start" type="checkbox">{{ tr('settings.schedule_run_on_start') }}</label>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.preprocessing') }}</h2></div>
+      <div class="field-grid slim">
+        <label class="toggle"><input id="preprocessing_enabled" type="checkbox">{{ tr('settings.preprocessing_enabled') }}</label>
+        <label>{{ tr('settings.preprocessing_dedupe') }}
+          <select id="preprocessing_dedupe_strategy">
+            <option value="normalized_url">normalized_url</option>
+            <option value="site_and_title">site_and_title</option>
+            <option value="company_title_location">company_title_location</option>
+          </select>
+        </label>
+        <label>{{ tr('settings.preprocessing_min_text') }}
+          <input id="preprocessing_min_text_chars" type="number" min="0">
+        </label>
+        <label class="toggle"><input id="preprocessing_normalize_whitespace" type="checkbox">{{ tr('settings.preprocessing_normalize') }}</label>
+        <label>{{ tr('settings.preprocessing_languages') }}
+          <textarea id="preprocessing_language_hints" rows="3" placeholder="ko&#10;en"></textarea>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel two-column">
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.ai_auth') }}</h2></div>
+      <div class="field-grid slim">
+        <label>{{ tr('settings.ai_auth_mode') }}
+          <select id="ai_auth_mode">
+            <option value="none">none</option>
+            <option value="api_key_env">api_key_env</option>
+            <option value="oauth_cli">oauth_cli</option>
+            <option value="external_command">external_command</option>
+          </select>
+        </label>
+        <label>{{ tr('settings.ai_api_key_env') }}
+          <input id="ai_api_key_env" type="text" placeholder="OPENAI_API_KEY">
+        </label>
+        <label>{{ tr('settings.ai_oauth_profile') }}
+          <input id="ai_oauth_profile" type="text">
+        </label>
+        <label>{{ tr('settings.ai_external_command') }}
+          <textarea id="ai_external_command" rows="3" placeholder="path/to/enrichment-command --json"></textarea>
+        </label>
+        <label>{{ tr('settings.ai_config_json') }}
+          <textarea id="ai_config" rows="8" spellcheck="false"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.integrations') }}</h2></div>
+      <div class="field-grid slim">
+        <label>{{ tr('settings.harness_config') }}
+          <textarea id="harness_config" rows="6" spellcheck="false"></textarea>
+        </label>
+        <label>{{ tr('settings.mcp_servers') }}
+          <textarea id="mcp_servers" rows="6" spellcheck="false"></textarea>
+        </label>
+        <label>{{ tr('settings.skills_config') }}
+          <textarea id="skills_config" rows="6" spellcheck="false"></textarea>
+        </label>
+        <label>{{ tr('settings.messaging_config') }}
+          <textarea id="messaging_config" rows="6" spellcheck="false"></textarea>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-header"><h2>{{ tr('settings.contact_actions') }}</h2></div>
+    <div class="field-grid">
+      <label class="toggle"><input id="contact_email_enabled" type="checkbox">{{ tr('settings.contact_email_enabled') }}</label>
+      <label>{{ tr('settings.contact_email_from') }}
+        <input id="contact_email_from" type="email">
+      </label>
+      <label>{{ tr('settings.contact_recipients') }}
+        <textarea id="contact_default_recipients" rows="4" placeholder="recruiting@example.com"></textarea>
+      </label>
+      <label>{{ tr('settings.contact_template') }}
+        <textarea id="contact_message_template" rows="8"></textarea>
+      </label>
+    </div>
+  </section>
+
+  <section class="panel two-column">
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.filter_inputs') }}</h2></div>
+      <div class="field-grid">
+        <label>{{ tr('settings.roles') }}
+          <textarea id="roles" rows="4" placeholder="{{ tr('settings.roles_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.keywords') }}
+          <textarea id="keywords" rows="4" placeholder="Python&#10;FastAPI"></textarea>
+        </label>
+        <label>{{ tr('settings.locations') }}
+          <textarea id="locations" rows="4" placeholder="{{ tr('settings.locations_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.companies') }}
+          <textarea id="companies" rows="4" placeholder="{{ tr('settings.companies_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.experience') }}
+          <textarea id="experience_levels" rows="4" placeholder="{{ tr('settings.experience_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.education') }}
+          <textarea id="education_levels" rows="4" placeholder="{{ tr('settings.education_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.employment_types') }}
+          <textarea id="employment_types" rows="4" placeholder="{{ tr('settings.employment_types_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.required_terms') }}
+          <textarea id="required_terms" rows="4" placeholder="{{ tr('settings.required_terms_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.industries') }}
+          <textarea id="industries" rows="4" placeholder="{{ tr('settings.industries_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.skills') }}
+          <textarea id="skills" rows="4" placeholder="{{ tr('settings.skills_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.tags') }}
+          <textarea id="tags" rows="4" placeholder="{{ tr('settings.tags_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.workplace_types') }}
+          <textarea id="workplace_types" rows="4" placeholder="{{ tr('settings.workplace_types_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.salary_ranges') }}
+          <textarea id="salary_ranges" rows="4" placeholder="{{ tr('settings.salary_ranges_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.company_types') }}
+          <textarea id="company_types" rows="4" placeholder="{{ tr('settings.company_types_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.company_sizes') }}
+          <textarea id="company_sizes" rows="4" placeholder="{{ tr('settings.company_sizes_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.position_levels') }}
+          <textarea id="position_levels" rows="4" placeholder="{{ tr('settings.position_levels_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.majors') }}
+          <textarea id="majors" rows="4" placeholder="{{ tr('settings.majors_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.certifications') }}
+          <textarea id="certifications" rows="4" placeholder="{{ tr('settings.certifications_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.preferred_conditions') }}
+          <textarea id="preferred_conditions" rows="4" placeholder="{{ tr('settings.preferred_conditions_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.welfare') }}
+          <textarea id="welfare" rows="4" placeholder="{{ tr('settings.welfare_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.date_posted') }}
+          <textarea id="date_posted" rows="4" placeholder="{{ tr('settings.date_posted_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.deadline') }}
+          <textarea id="deadline" rows="4" placeholder="{{ tr('settings.deadline_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.easy_apply') }}
+          <textarea id="easy_apply" rows="4" placeholder="{{ tr('settings.easy_apply_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.applicant_signals') }}
+          <textarea id="applicant_signals" rows="4" placeholder="{{ tr('settings.applicant_signals_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.network_signals') }}
+          <textarea id="network_signals" rows="4" placeholder="{{ tr('settings.network_signals_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.leader_positions') }}
+          <textarea id="leader_positions" rows="4" placeholder="{{ tr('settings.leader_positions_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.headhunting') }}
+          <textarea id="headhunting" rows="4" placeholder="{{ tr('settings.headhunting_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.theme_tags') }}
+          <textarea id="theme_tags" rows="4" placeholder="{{ tr('settings.theme_tags_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.exclude_keywords') }}
+          <textarea id="exclude_keywords" rows="4" placeholder="{{ tr('settings.exclude_keywords_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.extra_terms') }}
+          <textarea id="extra_terms" rows="4" placeholder="{{ tr('settings.extra_terms_placeholder') }}"></textarea>
+        </label>
+        <label>{{ tr('settings.strict_groups') }}
+          <textarea id="strict_match_groups" rows="4" placeholder="{% for group in strict_groups %}{{ group }}{% if not loop.last %}&#10;{% endif %}{% endfor %}"></textarea>
+        </label>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-header"><h2>{{ tr('settings.runtime') }}</h2></div>
+      <div class="field-grid slim">
+        <label>{{ tr('settings.export_dir') }}
+          <input id="output_dir" type="text">
+        </label>
+        <label>{{ tr('settings.per_site_cap') }}
+          <input id="max_results_per_site" type="number" min="1">
+        </label>
+        <label>{{ tr('settings.user_agent') }}
+          <textarea id="user_agent" rows="6"></textarea>
+        </label>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel note-panel">
+    <div class="panel-header"><h2>{{ tr('settings.notes') }}</h2></div>
+    <ul class="note-list">
+      <li>{{ tr('settings.note_separators') }}</li>
+      <li>{{ tr('settings.note_nl') }}</li>
+      <li>{{ tr('settings.note_broad') }}</li>
+      <li>{{ tr('settings.note_openai') }}</li>
+      <li>{{ tr('settings.note_browser') }}</li>
+      <li>{{ tr('settings.note_manual') }}</li>
+    </ul>
+  </section>
+
+  <div class="toolbar">
+    <button type="submit" class="button primary">{{ tr('settings.save') }}</button>
+    <span id="settings-status" class="muted"></span>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,33 @@
+{
+  "name": "@hcscat/job-researcher",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Local job posting collection, enrichment, and review console.",
+  "type": "module",
+  "bin": {
+    "job-researcher": "./bin/job-researcher.mjs"
+  },
+  "scripts": {
+    "setup": "node ./bin/job-researcher.mjs setup",
+    "init-config": "node ./bin/job-researcher.mjs init-config",
+    "serve": "node ./bin/job-researcher.mjs serve --host 127.0.0.1 --port 8000",
+    "serve:reload": "node ./bin/job-researcher.mjs serve --host 127.0.0.1 --port 8000 --reload",
+    "collect": "node ./bin/job-researcher.mjs --config ./config.yaml run",
+    "show-queries": "node ./bin/job-researcher.mjs --config ./config.yaml show-queries",
+    "test": "node ./bin/job-researcher.mjs test"
+  },
+  "files": [
+    "bin/",
+    "job_harvest/",
+    "job_researcher/",
+    "agent-pack/",
+    "docs/",
+    "config.example.yaml",
+    "requirements.txt",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

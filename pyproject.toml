@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "job-researcher"
+version = "0.1.0"
+description = "Local job posting collection, enrichment, and review console."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "APScheduler>=3.10.4",
+  "beautifulsoup4>=4.12.3",
+  "fastapi>=0.115.0",
+  "httpx>=0.28.0",
+  "Jinja2>=3.1.4",
+  "openai>=1.76.0",
+  "playwright>=1.52.0",
+  "PyYAML>=6.0.2",
+  "requests>=2.32.3",
+  "SQLAlchemy>=2.0.36",
+  "tzdata>=2025.2",
+  "uvicorn>=0.32.0",
+]
+
+[project.scripts]
+job-researcher = "job_harvest.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["job_harvest*", "job_researcher*"]
+
+[tool.setuptools.package-data]
+job_harvest = ["templates/*.html", "static/*"]
+

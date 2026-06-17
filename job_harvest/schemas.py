@@ -1,0 +1,366 @@
+from __future__ import annotations
+
+import re
+from datetime import datetime
+from typing import Any
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from job_harvest.config import (
+    ADVANCED_FILTER_FIELDS,
+    DEFAULT_EXTRA_TERMS,
+    DEFAULT_IT_CRAWL_TERMS,
+    DEFAULT_SITE_KEYS,
+    DEFAULT_USER_AGENT,
+    STRICT_MATCHABLE_FIELDS,
+)
+from job_harvest.sites import DEFAULT_SITES
+
+
+STRICT_MATCH_GROUPS = set(STRICT_MATCHABLE_FIELDS)
+TIME_RE = re.compile(r"^(?:[01]\d|2[0-3]):[0-5]\d$")
+
+
+class SettingsPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    site_keys: list[str] = Field(default_factory=lambda: list(DEFAULT_SITE_KEYS))
+    queries: list[str] = Field(default_factory=list)
+    crawl_strategy: Literal["broad_it_scan", "query_search"] = "broad_it_scan"
+    crawl_terms: list[str] = Field(default_factory=lambda: list(DEFAULT_IT_CRAWL_TERMS))
+    listing_page_limit: int = 0
+    roles: list[str] = Field(default_factory=list)
+    keywords: list[str] = Field(default_factory=list)
+    exclude_keywords: list[str] = Field(default_factory=list)
+    locations: list[str] = Field(default_factory=list)
+    companies: list[str] = Field(default_factory=list)
+    experience_levels: list[str] = Field(default_factory=list)
+    education_levels: list[str] = Field(default_factory=list)
+    employment_types: list[str] = Field(default_factory=list)
+    required_terms: list[str] = Field(default_factory=list)
+    industries: list[str] = Field(default_factory=list)
+    salary_ranges: list[str] = Field(default_factory=list)
+    company_types: list[str] = Field(default_factory=list)
+    company_sizes: list[str] = Field(default_factory=list)
+    position_levels: list[str] = Field(default_factory=list)
+    majors: list[str] = Field(default_factory=list)
+    certifications: list[str] = Field(default_factory=list)
+    preferred_conditions: list[str] = Field(default_factory=list)
+    welfare: list[str] = Field(default_factory=list)
+    skills: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    workplace_types: list[str] = Field(default_factory=list)
+    date_posted: list[str] = Field(default_factory=list)
+    deadline: list[str] = Field(default_factory=list)
+    easy_apply: list[str] = Field(default_factory=list)
+    applicant_signals: list[str] = Field(default_factory=list)
+    network_signals: list[str] = Field(default_factory=list)
+    leader_positions: list[str] = Field(default_factory=list)
+    headhunting: list[str] = Field(default_factory=list)
+    theme_tags: list[str] = Field(default_factory=list)
+    extra_terms: list[str] = Field(default_factory=lambda: list(DEFAULT_EXTRA_TERMS))
+    strict_match_groups: list[str] = Field(default_factory=list)
+
+    max_results_per_site: int = 8
+    request_timeout_seconds: int = 20
+    fetch_details: bool = True
+    store_html: bool = False
+    detail_refetch_hours: int = 24
+    concurrency: int = 4
+    pause_between_searches_seconds: float = 1.0
+    ai_enrichment_enabled: bool = False
+    ai_provider: Literal["heuristic", "openai", "external_command"] = "heuristic"
+    ai_model: str = ""
+    user_agent: str = DEFAULT_USER_AGENT
+    browser_enabled: bool = True
+    browser_headless: bool = True
+    browser_timeout_seconds: int = 60
+    output_dir: str = "./data/exports"
+
+    schedule_enabled: bool = False
+    schedule_mode: Literal["fixed_times", "interval_hours"] = "fixed_times"
+    schedule_times: list[str] = Field(default_factory=lambda: ["09:00"])
+    schedule_interval_hours: int = 4
+    schedule_run_on_start: bool = True
+    schedule_timezone: str = "Asia/Seoul"
+
+    preprocessing_enabled: bool = True
+    preprocessing_dedupe_strategy: Literal[
+        "normalized_url",
+        "site_and_title",
+        "company_title_location",
+    ] = "normalized_url"
+    preprocessing_min_text_chars: int = 80
+    preprocessing_normalize_whitespace: bool = True
+    preprocessing_language_hints: list[str] = Field(default_factory=lambda: ["ko", "en"])
+
+    ai_auth_mode: Literal["none", "api_key_env", "oauth_cli", "external_command"] = "none"
+    ai_api_key_env: str = "OPENAI_API_KEY"
+    ai_oauth_profile: str = ""
+    ai_external_command: str = ""
+    ai_config: dict[str, Any] = Field(default_factory=dict)
+
+    harness_config: dict[str, Any] = Field(default_factory=dict)
+    mcp_servers: dict[str, Any] = Field(default_factory=dict)
+    skills_config: dict[str, Any] = Field(default_factory=dict)
+    messaging_config: dict[str, Any] = Field(default_factory=dict)
+    contact_email_enabled: bool = False
+    contact_email_from: str = ""
+    contact_default_recipients: list[str] = Field(default_factory=list)
+    contact_message_template: str = (
+        "Hello,\n\n"
+        "I am interested in {title} at {company}.\n\n"
+        "Posting: {url}\n"
+    )
+
+    @field_validator(
+        "site_keys",
+        "queries",
+        "crawl_terms",
+        "roles",
+        "keywords",
+        "exclude_keywords",
+        "locations",
+        "companies",
+        "experience_levels",
+        "education_levels",
+        "employment_types",
+        "required_terms",
+        *ADVANCED_FILTER_FIELDS,
+        "extra_terms",
+        "strict_match_groups",
+        "preprocessing_language_hints",
+        "contact_default_recipients",
+    )
+    @classmethod
+    def strip_list_values(cls, values: list[str]) -> list[str]:
+        return [value.strip() for value in values if value.strip()]
+
+    @field_validator("site_keys")
+    @classmethod
+    def validate_sites(cls, values: list[str]) -> list[str]:
+        unknown = [value for value in values if value not in DEFAULT_SITES]
+        if unknown:
+            raise ValueError(f"Unknown sites: {', '.join(sorted(unknown))}")
+        return values
+
+    @field_validator("strict_match_groups")
+    @classmethod
+    def validate_groups(cls, values: list[str]) -> list[str]:
+        unknown = [value for value in values if value not in STRICT_MATCH_GROUPS]
+        if unknown:
+            raise ValueError(f"Unknown strict_match_groups: {', '.join(sorted(unknown))}")
+        return values
+
+    @field_validator("schedule_times")
+    @classmethod
+    def validate_times(cls, values: list[str]) -> list[str]:
+        cleaned = values or ["09:00"]
+        for value in cleaned:
+            if not TIME_RE.match(value):
+                raise ValueError("Schedule times must use HH:MM format.")
+        return cleaned
+
+    @field_validator(
+        "listing_page_limit",
+        "max_results_per_site",
+        "request_timeout_seconds",
+        "detail_refetch_hours",
+        "concurrency",
+        "browser_timeout_seconds",
+        "schedule_interval_hours",
+        "preprocessing_min_text_chars",
+    )
+    @classmethod
+    def validate_positive_ints(cls, value: int) -> int:
+        return max(0, value) if value == 0 else max(1, value)
+
+    @field_validator("pause_between_searches_seconds")
+    @classmethod
+    def validate_pause(cls, value: float) -> float:
+        return max(0.0, value)
+
+
+class CollectionRunRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    triggered_by: str
+    status: str
+    message: str
+    hit_count: int
+    unique_hit_count: int
+    saved_count: int
+    relevant_count: int
+    new_count: int
+    updated_count: int
+    listing_page_count: int
+    detail_page_count: int
+    duplicate_skip_count: int
+    ai_enriched_count: int
+    raw_bytes_written: int
+    query_terms: list[str]
+    site_keys: list[str]
+    export_path: str
+    started_at: datetime
+    finished_at: datetime | None
+
+
+class JobPostingRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    latest_run_id: int | None
+    site_key: str
+    site_name: str
+    normalized_url: str
+    url: str
+    source_query: str
+    title: str
+    search_title: str
+    company: str
+    location: str
+    employment_type: str
+    experience_level: str
+    education_level: str
+    date_posted: str
+    valid_through: str
+    summary: str
+    description: str
+    extraction_method: str
+    status_code: int
+    tags: list[str]
+    listing_snapshot_sha256: str
+    detail_snapshot_sha256: str
+    is_it_job: bool
+    ai_provider: str
+    ai_model: str
+    ai_summary: str
+    ai_relevance_reason: str
+    ai_job_family: str
+    ai_seniority: str
+    ai_work_model: str
+    ai_tech_stack: list[str]
+    ai_requirements: list[str]
+    ai_responsibilities: list[str]
+    ai_benefits: list[str]
+    discovered_at: datetime | None
+    detail_fetched_at: datetime | None
+    enriched_at: datetime | None
+    first_seen_at: datetime
+    last_seen_at: datetime
+    seen_count: int
+    profile_fit_score: int = 0
+    profile_fit_level: str = ""
+    profile_fit_reasons: list[str] = Field(default_factory=list)
+    profile_fit_highlights: list[str] = Field(default_factory=list)
+    profile_fit_cautions: list[str] = Field(default_factory=list)
+
+
+class JobListResponse(BaseModel):
+    items: list[JobPostingRead]
+    total: int
+    page: int
+    page_size: int
+
+
+class JobDetailRead(JobPostingRead):
+    raw_payload: dict[str, Any] | None = None
+
+
+class RunPostingRead(BaseModel):
+    site_key: str = ""
+    site_name: str = ""
+    normalized_url: str = ""
+    url: str = ""
+    title: str = ""
+    company: str = ""
+    location: str = ""
+    status_code: int = 0
+    is_it_job: bool = False
+    listing_snapshot_sha256: str = ""
+    detail_snapshot_sha256: str = ""
+
+
+class RawManifestRead(BaseModel):
+    site_key: str = ""
+    site_name: str = ""
+    normalized_url: str = ""
+    url: str = ""
+    title: str = ""
+    status_code: int = 0
+    is_it_job: bool = False
+    listing_snapshot_sha256: str = ""
+    detail_snapshot_sha256: str = ""
+    detail_fetched_at: str = ""
+    enriched_at: str = ""
+
+
+class RunDetailRead(BaseModel):
+    run: CollectionRunRead
+    postings: list[RunPostingRead]
+    raw_manifest: list[RawManifestRead]
+
+
+class RawSnapshotRead(BaseModel):
+    category: str
+    sha256_hex: str
+    text: str
+
+
+class RequestInterpretPayload(BaseModel):
+    text: str = Field(min_length=1)
+    base_payload: SettingsPayload | None = None
+
+
+class RequestInterpretRead(BaseModel):
+    provider: str
+    model: str
+    notes: list[str]
+    payload: SettingsPayload
+
+
+class CandidateProfileRead(BaseModel):
+    key: str
+    title: str
+    headline: str
+    summary: str
+    target_roles: list[str]
+    strong_skills: list[str]
+    support_skills: list[str]
+    target_domains: list[str]
+    preferred_job_families: list[str]
+    avoid_job_families: list[str]
+    avoid_keywords: list[str]
+    preferred_locations: list[str]
+    collection_queries: list[str]
+    collection_exclude_keywords: list[str]
+    source_document: str
+    source_document_exists: bool
+
+
+class SiteCountRead(BaseModel):
+    site_name: str
+    count: int
+
+
+class SchedulerJobRead(BaseModel):
+    job_id: str
+    description: str
+    next_run_at: str | None
+
+
+class SchedulerStatusRead(BaseModel):
+    running: bool
+    jobs: list[SchedulerJobRead]
+
+
+class DashboardSummaryRead(BaseModel):
+    total_postings: int
+    total_runs: int
+    pending_enrichment: int
+    is_collecting: bool
+    site_counts: list[SiteCountRead]
+    recent_runs: list[CollectionRunRead]
+    scheduler: SchedulerStatusRead

@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <div>
+    <p class="eyebrow">{{ tr('dashboard.eyebrow') }}</p>
+    <h1>{{ tr('dashboard.hero_title') }}</h1>
+    <p class="hero-copy">{{ tr('dashboard.hero_copy', total_postings=summary.total_postings, total_runs=summary.total_runs) }}</p>
+    <p class="hero-copy">{{ tr('dashboard.hero_note') }}</p>
+  </div>
+  <div class="hero-actions">
+    <a class="button primary" href="/settings">{{ tr('dashboard.open_settings') }}</a>
+    <a class="button ghost" href="/jobs">{{ tr('dashboard.browse_jobs') }}</a>
+  </div>
+</section>
+
+<section class="card-grid">
+  <article class="card stat">
+    <span class="label">{{ tr('dashboard.metric_stored_jobs') }}</span>
+    <strong>{{ summary.total_postings }}</strong>
+  </article>
+  <article class="card stat">
+    <span class="label">{{ tr('dashboard.metric_collection_runs') }}</span>
+    <strong>{{ summary.total_runs }}</strong>
+  </article>
+  <article class="card stat">
+    <span class="label">{{ tr('dashboard.metric_pending_enrichment') }}</span>
+    <strong>{{ summary.pending_enrichment }}</strong>
+  </article>
+  <article class="card stat">
+    <span class="label">{{ tr('dashboard.metric_collector_state') }}</span>
+    <strong>{{ tr('dashboard.state_running') if summary.is_collecting else tr('dashboard.state_idle') }}</strong>
+  </article>
+</section>
+
+<section class="panel-grid">
+  <article class="panel">
+    <div class="panel-header">
+      <h2>{{ tr('dashboard.coverage_by_site') }}</h2>
+    </div>
+    <div class="site-list">
+      {% for row in summary.site_counts %}
+      <div class="site-row">
+        <span>{{ row.site_name }}</span>
+        <strong>{{ row.count }}</strong>
+      </div>
+      {% else %}
+      <p class="muted">{{ tr('dashboard.no_postings') }}</p>
+      {% endfor %}
+    </div>
+  </article>
+
+  <article class="panel note-panel">
+    <div class="panel-header">
+      <h2>{{ tr('dashboard.how_it_works') }}</h2>
+    </div>
+    <ul class="note-list">
+      <li>{{ tr('dashboard.note_ai_or_api') }}</li>
+      <li>{{ tr('dashboard.note_raw_normalized') }}</li>
+      <li>{{ tr('dashboard.note_run_detail') }}</li>
+      <li>{{ tr('dashboard.note_job_browse') }}</li>
+    </ul>
+  </article>
+</section>
+
+<section class="panel">
+  <div class="panel-header">
+    <h2>{{ tr('dashboard.recent_runs') }}</h2>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>{{ tr('dashboard.table.id') }}</th>
+          <th>{{ tr('dashboard.table.started') }}</th>
+          <th>{{ tr('dashboard.table.status') }}</th>
+          <th>{{ tr('dashboard.table.unique_relevant') }}</th>
+          <th>{{ tr('dashboard.table.duplicates') }}</th>
+          <th>{{ tr('dashboard.table.ai_enriched') }}</th>
+          <th>{{ tr('dashboard.table.raw_bytes') }}</th>
+          <th>{{ tr('dashboard.table.message') }}</th>
+        </tr>
+      </thead>
+      <tbody id="recent-runs-body">
+        {% for run in summary.recent_runs %}
+        <tr>
+          <td><a href="/runs/{{ run.id }}">{{ run.id }}</a></td>
+          <td>{{ run.started_at }}</td>
+          <td><span class="pill {{ run.status }}">{{ run.status }}</span></td>
+          <td>{{ run.unique_hit_count }} / {{ run.relevant_count }}</td>
+          <td>{{ run.duplicate_skip_count }}</td>
+          <td>{{ run.ai_enriched_count }}</td>
+          <td>{{ run.raw_bytes_written }}</td>
+          <td>{{ run.message }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="8" class="muted center">{{ tr('dashboard.no_runs') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

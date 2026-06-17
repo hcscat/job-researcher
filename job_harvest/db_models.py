@@ -1,0 +1,188 @@
+from __future__ import annotations
+
+from datetime import datetime, timezone
+from typing import Any
+
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column
+
+from job_harvest.database import Base
+
+
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+class AppSettingsRecord(Base):
+    __tablename__ = "app_settings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, default=1)
+    site_keys: Mapped[list[str]] = mapped_column(JSON, default=list)
+    queries: Mapped[list[str]] = mapped_column(JSON, default=list)
+    crawl_strategy: Mapped[str] = mapped_column(String(50), default="broad_it_scan")
+    crawl_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
+    listing_page_limit: Mapped[int] = mapped_column(Integer, default=0)
+    roles: Mapped[list[str]] = mapped_column(JSON, default=list)
+    keywords: Mapped[list[str]] = mapped_column(JSON, default=list)
+    exclude_keywords: Mapped[list[str]] = mapped_column(JSON, default=list)
+    locations: Mapped[list[str]] = mapped_column(JSON, default=list)
+    companies: Mapped[list[str]] = mapped_column(JSON, default=list)
+    experience_levels: Mapped[list[str]] = mapped_column(JSON, default=list)
+    education_levels: Mapped[list[str]] = mapped_column(JSON, default=list)
+    employment_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+    required_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
+    industries: Mapped[list[str]] = mapped_column(JSON, default=list)
+    salary_ranges: Mapped[list[str]] = mapped_column(JSON, default=list)
+    company_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+    company_sizes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    position_levels: Mapped[list[str]] = mapped_column(JSON, default=list)
+    majors: Mapped[list[str]] = mapped_column(JSON, default=list)
+    certifications: Mapped[list[str]] = mapped_column(JSON, default=list)
+    preferred_conditions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    welfare: Mapped[list[str]] = mapped_column(JSON, default=list)
+    skills: Mapped[list[str]] = mapped_column(JSON, default=list)
+    tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    workplace_types: Mapped[list[str]] = mapped_column(JSON, default=list)
+    date_posted: Mapped[list[str]] = mapped_column(JSON, default=list)
+    deadline: Mapped[list[str]] = mapped_column(JSON, default=list)
+    easy_apply: Mapped[list[str]] = mapped_column(JSON, default=list)
+    applicant_signals: Mapped[list[str]] = mapped_column(JSON, default=list)
+    network_signals: Mapped[list[str]] = mapped_column(JSON, default=list)
+    leader_positions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    headhunting: Mapped[list[str]] = mapped_column(JSON, default=list)
+    theme_tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    extra_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
+    strict_match_groups: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    max_results_per_site: Mapped[int] = mapped_column(Integer, default=8)
+    request_timeout_seconds: Mapped[int] = mapped_column(Integer, default=20)
+    fetch_details: Mapped[bool] = mapped_column(Boolean, default=True)
+    store_html: Mapped[bool] = mapped_column(Boolean, default=False)
+    detail_refetch_hours: Mapped[int] = mapped_column(Integer, default=24)
+    concurrency: Mapped[int] = mapped_column(Integer, default=4)
+    pause_between_searches_seconds: Mapped[float] = mapped_column(default=1.0)
+    ai_enrichment_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    ai_provider: Mapped[str] = mapped_column(String(50), default="heuristic")
+    ai_model: Mapped[str] = mapped_column(String(120), default="")
+    user_agent: Mapped[str] = mapped_column(Text, default="")
+    browser_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    browser_headless: Mapped[bool] = mapped_column(Boolean, default=True)
+    browser_timeout_seconds: Mapped[int] = mapped_column(Integer, default=60)
+    output_dir: Mapped[str] = mapped_column(String(500), default="./data/exports")
+
+    schedule_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    schedule_mode: Mapped[str] = mapped_column(String(50), default="fixed_times")
+    schedule_times: Mapped[list[str]] = mapped_column(JSON, default=list)
+    schedule_interval_hours: Mapped[int] = mapped_column(Integer, default=4)
+    schedule_run_on_start: Mapped[bool] = mapped_column(Boolean, default=True)
+    schedule_timezone: Mapped[str] = mapped_column(String(80), default="Asia/Seoul")
+
+    preprocessing_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    preprocessing_dedupe_strategy: Mapped[str] = mapped_column(String(80), default="normalized_url")
+    preprocessing_min_text_chars: Mapped[int] = mapped_column(Integer, default=80)
+    preprocessing_normalize_whitespace: Mapped[bool] = mapped_column(Boolean, default=True)
+    preprocessing_language_hints: Mapped[list[str]] = mapped_column(JSON, default=list)
+
+    ai_auth_mode: Mapped[str] = mapped_column(String(80), default="none")
+    ai_api_key_env: Mapped[str] = mapped_column(String(120), default="OPENAI_API_KEY")
+    ai_oauth_profile: Mapped[str] = mapped_column(String(255), default="")
+    ai_external_command: Mapped[str] = mapped_column(Text, default="")
+    ai_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+
+    harness_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    mcp_servers: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    skills_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    messaging_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    contact_email_enabled: Mapped[bool] = mapped_column(Boolean, default=False)
+    contact_email_from: Mapped[str] = mapped_column(String(255), default="")
+    contact_default_recipients: Mapped[list[str]] = mapped_column(JSON, default=list)
+    contact_message_template: Mapped[str] = mapped_column(Text, default="")
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=utcnow,
+        onupdate=utcnow,
+    )
+
+
+class CollectionRunRecord(Base):
+    __tablename__ = "collection_runs"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    triggered_by: Mapped[str] = mapped_column(String(50), default="manual")
+    status: Mapped[str] = mapped_column(String(30), default="running")
+    message: Mapped[str] = mapped_column(Text, default="")
+    hit_count: Mapped[int] = mapped_column(Integer, default=0)
+    unique_hit_count: Mapped[int] = mapped_column(Integer, default=0)
+    saved_count: Mapped[int] = mapped_column(Integer, default=0)
+    relevant_count: Mapped[int] = mapped_column(Integer, default=0)
+    new_count: Mapped[int] = mapped_column(Integer, default=0)
+    updated_count: Mapped[int] = mapped_column(Integer, default=0)
+    listing_page_count: Mapped[int] = mapped_column(Integer, default=0)
+    detail_page_count: Mapped[int] = mapped_column(Integer, default=0)
+    duplicate_skip_count: Mapped[int] = mapped_column(Integer, default=0)
+    ai_enriched_count: Mapped[int] = mapped_column(Integer, default=0)
+    raw_bytes_written: Mapped[int] = mapped_column(Integer, default=0)
+    query_terms: Mapped[list[str]] = mapped_column(JSON, default=list)
+    site_keys: Mapped[list[str]] = mapped_column(JSON, default=list)
+    export_path: Mapped[str] = mapped_column(String(500), default="")
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class JobPostingRecord(Base):
+    __tablename__ = "job_postings"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    latest_run_id: Mapped[int | None] = mapped_column(
+        ForeignKey("collection_runs.id"),
+        nullable=True,
+    )
+
+    normalized_url: Mapped[str] = mapped_column(String(1000), unique=True, index=True)
+    url: Mapped[str] = mapped_column(Text)
+    site_key: Mapped[str] = mapped_column(String(50), index=True)
+    site_name: Mapped[str] = mapped_column(String(100), index=True)
+    source_query: Mapped[str] = mapped_column(Text, default="")
+
+    title: Mapped[str] = mapped_column(Text, default="")
+    search_title: Mapped[str] = mapped_column(Text, default="")
+    search_snippet: Mapped[str] = mapped_column(Text, default="")
+    page_title: Mapped[str] = mapped_column(Text, default="")
+    company: Mapped[str] = mapped_column(String(255), default="", index=True)
+    location: Mapped[str] = mapped_column(String(255), default="", index=True)
+    employment_type: Mapped[str] = mapped_column(String(255), default="")
+    experience_level: Mapped[str] = mapped_column(String(255), default="")
+    education_level: Mapped[str] = mapped_column(String(255), default="")
+    date_posted: Mapped[str] = mapped_column(String(120), default="")
+    valid_through: Mapped[str] = mapped_column(String(120), default="")
+    pub_date: Mapped[str] = mapped_column(String(120), default="")
+    summary: Mapped[str] = mapped_column(Text, default="")
+    description: Mapped[str] = mapped_column(Text, default="")
+    extraction_method: Mapped[str] = mapped_column(String(80), default="search-result")
+    status_code: Mapped[int] = mapped_column(Integer, default=0)
+    html_path: Mapped[str] = mapped_column(String(500), default="")
+    tags: Mapped[list[str]] = mapped_column(JSON, default=list)
+    listing_snapshot_sha256: Mapped[str] = mapped_column(String(64), default="")
+    detail_snapshot_sha256: Mapped[str] = mapped_column(String(64), default="")
+    is_it_job: Mapped[bool] = mapped_column(Boolean, default=True, index=True)
+    ai_provider: Mapped[str] = mapped_column(String(50), default="")
+    ai_model: Mapped[str] = mapped_column(String(120), default="")
+    ai_summary: Mapped[str] = mapped_column(Text, default="")
+    ai_relevance_reason: Mapped[str] = mapped_column(Text, default="")
+    ai_job_family: Mapped[str] = mapped_column(String(80), default="", index=True)
+    ai_seniority: Mapped[str] = mapped_column(String(80), default="")
+    ai_work_model: Mapped[str] = mapped_column(String(80), default="")
+    ai_tech_stack: Mapped[list[str]] = mapped_column(JSON, default=list)
+    ai_requirements: Mapped[list[str]] = mapped_column(JSON, default=list)
+    ai_responsibilities: Mapped[list[str]] = mapped_column(JSON, default=list)
+    ai_benefits: Mapped[list[str]] = mapped_column(JSON, default=list)
+    raw_payload: Mapped[dict[str, Any] | None] = mapped_column(JSON, default=dict)
+
+    discovered_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    detail_fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    enriched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)
+    seen_count: Mapped[int] = mapped_column(Integer, default=1)
